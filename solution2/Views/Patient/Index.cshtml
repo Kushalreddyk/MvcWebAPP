@@ -1,0 +1,213 @@
+﻿@model IEnumerable<solution2.Models.PatientModel>
+
+@{
+    ViewBag.Title = "Index";
+}
+<head>
+    <style>
+        .custom-swalert-title-class {
+            color: #3366cc; 
+        }
+    </style>
+</head>
+
+<h2>PatientRecords</h2>
+
+<p>
+    <a class="btn btn-success" style="margin-bottom:5px" onclick="PopupForm('@Url.Action("AddorEdit","Patient")')"><i class="bi bi-plus-square-dotted"></i>  Add New</a>
+</p>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
+
+
+<table class="table table-light table-striped table-bordered border-dark table-hover" id="patientTable">
+    <thead class="table-light">
+        <tr>
+            <th>
+                PatientName
+            </th>
+            <th>
+                Gender
+            </th>
+            <th>
+                DOB
+            </th>
+            <th>
+                Height
+            </th>
+            <th>
+                Weight
+            </th>
+            <th>
+                BMI
+            </th>
+            <th>
+                created_on
+            </th>
+            <th>
+                updated_on
+            </th>
+            <th>
+                create_by
+            </th>
+            <th>
+                updated_by
+            </th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+@section scripts{
+    <script src="//cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    @*<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>*@
+
+
+    <script>
+        var Popup, dataTable;
+       $(document).ready(function () {
+    $('#patientTable').DataTable({
+        ajax: {
+            url: '@Url.Action("LoadTable", "Patient")',
+            type: 'GET',
+            dataType: 'json',
+            dataSrc: 'data'
+        },
+        columns: [
+            { data: 'PatientName', name: 'PatientName', render: function (data) { return data || 'N/A'; } },
+            { data: 'Gender.Name', name: 'Gender', render: function (data) { return data || 'N/A'; } },
+            { data: 'DOB', name: 'DOB', render: function (data) { return formatDate(data) || 'N/A'; } },
+            { data: 'Height', name: 'Height', render: function (data) { if (data === null || data === undefined) { return 'N/A'; } else { return data; } } },
+            { data: 'Weight', name: 'Weight', render: function (data) { if (data === null || data === undefined) { return 'N/A'; } else { return data; } } },
+            {
+                data: 'BMI',
+                name: 'BMI',
+                render: function (data) {
+                    if (data === null || data === undefined) {
+                        return 'N/A';
+                    } else {
+                        return data;
+                    }
+                }
+            },
+
+            { data: 'created_on', name: 'created_on', render: function (data) { return formatDate(data) || 'N/A'; } },
+            {
+                data: 'updated_on',
+                name: 'updated_on',
+                render: function (data) {
+                    if (data === null || data === undefined) {
+                        return '';
+                    } else {
+                        return formatDate(data);
+                    }
+                }
+            },
+            {
+                data: 'create_by',
+                name: 'create_by',
+                render: function (data) {
+                    if (data === null || data === undefined) {
+                        return '';
+                    } else {
+                        return data;
+                    }
+                }
+            },
+            {
+                data: 'updated_by',
+                name: 'updated_by',
+                render: function (data) {
+                    if (data === null || data === undefined) {
+                        return '';
+                    } else {
+                        return data;
+                    }
+                }
+            },
+            {
+                data: 'Id',
+                render: function (data) {
+                    return "<a class='btn btn-secondary btn-sm' onclick=PopupForm('@Url.Action("AddorEdit","Patient")/"+data+"')>Edit</a> " +
+                        "<span style='margin-left: 5px'></span>" +
+                        "<a class='btn btn-danger btn-sm' onclick=Delete(" + data + ")>Delete</a>";
+                }
+            }
+        ],
+        language: {
+            "emptyTable": "No data found, Please click on <b>Add New</b> button "
+        }
+    });
+});
+
+        function formatDate(dateString) {
+
+            var date = new Date(parseInt(dateString.substr(6)));
+
+            var formattedDate = (date.getMonth() + 1) + '/' + date.getDate() + '/' + date.getFullYear();
+
+            return formattedDate;
+        }
+        function PopupForm(url) {
+            $.get(url)
+                .done(function (response) {
+                    Swal.fire({
+                        title: 'Patient Details',
+                        html: response,
+                        heightAuto: false,
+                        customClass: {
+                            content: 'custom-swalert-content-class',
+                            confirmButton: 'custom-swalert-confirm-button-class',
+                            title: 'custom-swalert-title-class'
+                        },
+                        showCloseButton: true,
+                        showCancelButton: false,
+                        showConfirmButton: false,
+                        onClose: function () {
+                            // This part executes when the modal is closed
+                            Swal.close();
+                        }
+                    });
+                })
+                .fail(function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Failed to load the form!'
+                    });
+                });
+        }
+
+      function Delete(id) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'You will not be able to recover this data!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("Delete", "Patient")/' + id,
+                success: function () {
+                    Swal.fire(
+                        'Deleted!',
+                        'Your data has been deleted.',
+                        'success'
+                    );
+                    $('#patientTable').DataTable().ajax.reload();
+                }
+            });
+        }
+    });
+}
+
+
+    </script>
+}
